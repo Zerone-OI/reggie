@@ -29,6 +29,7 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
         metaObject.setValue("updateTime", LocalDateTime.now());
         metaObject.setValue("updateUser",BaseContext.getCurrentId());
         metaObject.setValue("isDeleted",0);
+
     }
 
 

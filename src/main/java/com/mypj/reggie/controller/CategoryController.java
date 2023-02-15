@@ -8,6 +8,8 @@ import com.mypj.reggie.service.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 /**
  * @author Peilong
  * @create 2023-02-14 13:31
@@ -36,7 +38,6 @@ public class CategoryController {
         categoryService.page(pageInfo,lambdaQueryWrapper);
 
         return R.success(pageInfo);
-
     }
 
     @DeleteMapping
@@ -49,5 +50,20 @@ public class CategoryController {
     public R<String> update(@RequestBody Category category){
         categoryService.updateById(category);
         return R.success("修改成功");
+    }
+
+    @GetMapping("/list")
+    public R<List<Category>> list(Category category){
+
+        //条件构造器
+        LambdaQueryWrapper<Category> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(category.getType() != null,Category::getType,category.getType());
+        lambdaQueryWrapper.orderByAsc(Category::getSort).orderByDesc(Category::getUpdateTime);
+        List<Category> list = categoryService.list(lambdaQueryWrapper);
+
+
+
+        return R.success(list);
+
     }
 }
