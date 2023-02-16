@@ -32,7 +32,7 @@ public class DishController {
     private CategoryService categoryService;
 
     @PostMapping
-    public R<String> save(@RequestBody DishDto dishDto){
+    public R<String> save(@RequestBody DishDto dishDto) {
         log.info(dishDto.toString());
 
         dishService.saveWithFlavor(dishDto);
@@ -40,34 +40,39 @@ public class DishController {
     }
 
     @GetMapping("/page")
-    public R<Page> page(int page, int pageSize,String name){
+    public R<Page> page(int page, int pageSize, String name) {
 
         //构造分页器对象
         Page<Dish> pageInfo = new Page<>(page, pageSize);
-        Page<DishDto> dishDtoPage= new Page<>();
+        Page<DishDto> dishDtoPage = new Page<>();
 
         //条件构造器
         LambdaQueryWrapper<Dish> queryWrapper = new LambdaQueryWrapper<>();
         //添加过滤条件 采用模糊查询
-        queryWrapper.like(name != null, Dish::getName,name);
+        queryWrapper.like(name != null, Dish::getName, name);
         //添加排序条件
         queryWrapper.orderByDesc(Dish::getUpdateTime);
 
         //执行查询
         dishService.page(pageInfo, queryWrapper);
 
-        BeanUtils.copyProperties(pageInfo,dishDtoPage,"records");
+        BeanUtils.copyProperties(pageInfo, dishDtoPage, "records");
 
         List<Dish> records = pageInfo.getRecords();
 
-        List<DishDto> list = records.stream().map((item)->{
+        List<DishDto> list = records.stream().map((item) -> {
             DishDto dishDto = new DishDto();
-            BeanUtils.copyProperties(item,dishDto);
+            BeanUtils.copyProperties(item, dishDto);
             //分类id
             Long categoryId = item.getCategoryId();
 
             //根据id查询对象
             Category category = categoryService.getById(categoryId);
+
+            if (category != null) {
+                String categoryName = category.getName();
+                dishDto.setCategoryName(categoryName);
+            }
             String categoryName = category.getName();
             dishDto.setCategoryName(categoryName);
             return dishDto;
@@ -76,6 +81,47 @@ public class DishController {
         dishDtoPage.setRecords(list);
 
         return R.success(dishDtoPage);
+
+    }
+
+    /**
+     * 根据
+     *
+     * @param id
+     * @return
+     */
+    @GetMapping("/{id}")
+    public R<DishDto> get(@PathVariable Long id) {
+        DishDto dishDto = dishService.getByIdWithFlavor(id);
+
+        return R.success(dishDto);
+    }
+
+    @PutMapping
+    public R<String> update(@RequestBody DishDto dishDto) {
+
+        dishService.updateByIdWithFlavor(dishDto);
+
+        return R.success("修改菜品成功");
+    }
+
+    @GetMapping("/list")
+    public R<List<Dish>> list(Dish dish) {
+
+        //构造查询条件
+        LambdaQueryWrapper<Dish> queryWrapper = new LambdaQueryWrapper<>();
+        //添加过滤条件 采用准确查询
+        queryWrapper.eq(dish.getCategoryId() != null, Dish::getCategoryId, dish.getCategoryId());
+        //添加排序条件,状态为1
+        queryWrapper.eq(Dish::getStatus, 1);
+
+        //添加排序条件
+        queryWrapper.orderByAsc(Dish::getSort).orderByDesc(Dish::getUpdateTime);
+
+        //执行查询
+        List<Dish> records = dishService.list(queryWrapper);
+
+        return R.success(records);
 
     }
 }
