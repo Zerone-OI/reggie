@@ -72,4 +72,31 @@ public class SetmealController {
         //执行查询
         return R.success(dtoPage);
     }
+
+    /**
+     * 删除套餐
+     *
+     * @param ids
+     * @return
+     */
+    @DeleteMapping
+    public R<String> delete(@RequestParam List<Long> ids) {
+        setmealService.deleteWithDish(ids);
+        return R.success("删除套餐成功");
+
+    }
+
+    @GetMapping("/list")
+    public R<List<Setmeal>> list(Setmeal setmeal) {
+        LambdaQueryWrapper<Setmeal> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(setmeal.getCategoryId() != null, Setmeal::getCategoryId, setmeal.getCategoryId());
+        queryWrapper.eq(setmeal.getStatus() != null, Setmeal::getStatus, setmeal.getStatus());
+        queryWrapper.orderByAsc(Setmeal::getUpdateTime);
+
+        List<Setmeal> setmealList = setmealService.list(queryWrapper);
+
+        return R.success(setmealList);
+
+    }
+
 }
