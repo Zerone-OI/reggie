@@ -7,10 +7,10 @@ import com.mypj.reggie.entity.ShoppingCart;
 import com.mypj.reggie.service.ShoppingCartService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @RestController
 @RequestMapping("/shoppingCart")
@@ -19,6 +19,12 @@ public class ShoppingCartController {
     @Autowired
     private ShoppingCartService shoppingCartService;
 
+    /**
+     * 添加购物车
+     *
+     * @param shoppingCart
+     * @return
+     */
     @PostMapping("/add")
     public R<ShoppingCart> add(@RequestBody ShoppingCart shoppingCart) {
         log.info("购物车数据:{}", shoppingCart);
@@ -49,11 +55,47 @@ public class ShoppingCartController {
         } else {
             //如果不存在,添加到购物车,设置数量为1
             cartServiceOne.setNumber(1);
+            cartServiceOne.setCreateTime(LocalDateTime.now());
             shoppingCartService.save(cartServiceOne);
             cartServiceOne = shoppingCart;
         }
 
 
         return R.success(cartServiceOne);
+    }
+
+    /**
+     * 查看购物车
+     *
+     * @return
+     */
+
+    @GetMapping("/list")
+    public R<List<ShoppingCart>> list() {
+
+        LambdaQueryWrapper<ShoppingCart> wrapper = new LambdaQueryWrapper<>();
+        //通过id进行查询
+        wrapper.eq(ShoppingCart::getId, BaseContext.getCurrentId());
+        wrapper.orderByAsc(ShoppingCart::getCreateTime);
+
+        List<ShoppingCart> shoppingCartList = shoppingCartService.list(wrapper);
+
+        return R.success(shoppingCartList);
+    }
+
+    /**
+     * 清空购物车
+     *
+     * @return
+     */
+    @DeleteMapping("/clean")
+    public R<String> delete() {
+
+        LambdaQueryWrapper<ShoppingCart> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ShoppingCart::getUserId, BaseContext.getCurrentId());
+
+        shoppingCartService.remove(wrapper);
+
+        return R.success("删除成功");
     }
 }
