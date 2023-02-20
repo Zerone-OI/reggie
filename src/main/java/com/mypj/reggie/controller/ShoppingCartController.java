@@ -31,18 +31,18 @@ public class ShoppingCartController {
 
         //获得用户id
         Long currentId = BaseContext.getCurrentId();
-        shoppingCart.setId(currentId);
+        shoppingCart.setUserId(currentId);
 
         //查询当前菜品或者套餐是否在购物车中
         Long dishId = shoppingCart.getDishId();
         LambdaQueryWrapper<ShoppingCart> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(ShoppingCart::getId, currentId);
+        wrapper.eq(ShoppingCart::getUserId, currentId);
         if (dishId == null) {
             //套餐在购物车中
             wrapper.eq(ShoppingCart::getSetmealId, shoppingCart.getSetmealId());
         } else {
             //菜品在购物车中
-            wrapper.eq(ShoppingCart::getDishId, shoppingCart.getDishId());
+            wrapper.eq(ShoppingCart::getDishId, dishId);
         }
 
         ShoppingCart cartServiceOne = shoppingCartService.getOne(wrapper);
@@ -54,9 +54,9 @@ public class ShoppingCartController {
             shoppingCartService.updateById(cartServiceOne);
         } else {
             //如果不存在,添加到购物车,设置数量为1
-            cartServiceOne.setNumber(1);
-            cartServiceOne.setCreateTime(LocalDateTime.now());
-            shoppingCartService.save(cartServiceOne);
+            shoppingCart.setNumber(1);
+            shoppingCart.setCreateTime(LocalDateTime.now());
+            shoppingCartService.save(shoppingCart);
             cartServiceOne = shoppingCart;
         }
 
@@ -75,7 +75,7 @@ public class ShoppingCartController {
 
         LambdaQueryWrapper<ShoppingCart> wrapper = new LambdaQueryWrapper<>();
         //通过id进行查询
-        wrapper.eq(ShoppingCart::getId, BaseContext.getCurrentId());
+        wrapper.eq(ShoppingCart::getUserId, BaseContext.getCurrentId());
         wrapper.orderByAsc(ShoppingCart::getCreateTime);
 
         List<ShoppingCart> shoppingCartList = shoppingCartService.list(wrapper);
@@ -89,7 +89,7 @@ public class ShoppingCartController {
      * @return
      */
     @DeleteMapping("/clean")
-    public R<String> delete() {
+    public R<String> clean() {
 
         LambdaQueryWrapper<ShoppingCart> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(ShoppingCart::getUserId, BaseContext.getCurrentId());

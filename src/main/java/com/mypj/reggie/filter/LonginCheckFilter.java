@@ -21,6 +21,7 @@ import java.io.IOException;
 public class LonginCheckFilter implements Filter {
     //路径匹配器
     public static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
+
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
@@ -35,25 +36,37 @@ public class LonginCheckFilter implements Filter {
                 "/employee/logout",
                 "/backend/**",
                 "/front/**",
-                "/common/**"
+                "/common/**",
+                "/user/sendMsg",
+                "/user/login"
         };
 
         //判断本次请求是否需要处理
         boolean check = check(urls, requestURI);
 
         //如果不需要处理,直接放行
-        if (check){
-            filterChain.doFilter(request,response);
+        if (check) {
+            filterChain.doFilter(request, response);
             return;
         }
 
         //如果已经登录,直接放行
-        if (request.getSession().getAttribute("employee") != null){
+        if (request.getSession().getAttribute("employee") != null) {
 
             Long empId = (Long) request.getSession().getAttribute("employee");
             BaseContext.setCurrentId(empId);
 
-            filterChain.doFilter(request,response);
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        //如果已经登录,直接放行
+        if (request.getSession().getAttribute("user") != null) {
+
+            Long userId = (Long) request.getSession().getAttribute("user");
+            BaseContext.setCurrentId(userId);
+
+            filterChain.doFilter(request, response);
             return;
         }
 
@@ -61,14 +74,12 @@ public class LonginCheckFilter implements Filter {
         response.getWriter().write(JSON.toJSONString(R.error("NOTLOGIN")));
         return;
 
-
-
     }
 
-    public boolean check(String[] urls,String requestURI){
+    public boolean check(String[] urls, String requestURI) {
         for (String url : urls) {
             boolean match = PATH_MATCHER.match(url, requestURI);
-            if (match){
+            if (match) {
                 return true;
             }
         }

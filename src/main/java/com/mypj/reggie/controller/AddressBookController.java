@@ -39,7 +39,7 @@ public class AddressBookController {
      * @param addressBook
      * @return
      */
-    @PutMapping
+    @PutMapping("default")
     public R<AddressBook> setDefault(@RequestBody AddressBook addressBook) {
         LambdaUpdateWrapper<AddressBook> queryWrapper = new LambdaUpdateWrapper<>();
         queryWrapper.eq(AddressBook::getUserId, BaseContext.getCurrentId());
@@ -61,6 +61,7 @@ public class AddressBookController {
      * @param id
      * @return
      */
+    @GetMapping("/{id}")
     public R getById(@PathVariable Long id) {
         AddressBook addressBook = addressBookService.getById(id);
         if (addressBook == null) {
@@ -69,6 +70,25 @@ public class AddressBookController {
             return R.success(addressBook);
         }
 
+    }
+
+    /**
+     * 查询默认地址
+     */
+    @GetMapping("default")
+    public R<AddressBook> getDefault() {
+        LambdaQueryWrapper<AddressBook> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(AddressBook::getUserId, BaseContext.getCurrentId());
+        queryWrapper.eq(AddressBook::getIsDefault, 1);
+
+        //SQL:select * from address_book where user_id = ? and is_default = 1
+        AddressBook addressBook = addressBookService.getOne(queryWrapper);
+
+        if (null == addressBook) {
+            return R.error("没有找到该对象");
+        } else {
+            return R.success(addressBook);
+        }
     }
 
     /**
